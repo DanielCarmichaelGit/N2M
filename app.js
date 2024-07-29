@@ -1,5 +1,6 @@
 const express = require("express");
 const cors = require("cors");
+const OpenAI = require("openai");
 
 // import utility functions
 const dbConnect = require("./src/utils/dbConnect");
@@ -24,10 +25,6 @@ const saltRounds = 10;
 
 function authenticateJWT(req, res, next) {
   const token = req.header("Authorization");
-  console.log(SECRET_JWT)
-  console.log(SECRET_JWT)
-  console.log(SECRET_JWT)
-  console.log(SECRET_JWT)
 
   if (!token) {
     return res.status(401).json({ message: "Unauthorized" });
@@ -118,6 +115,89 @@ app.post("/context", async (req, res) => {
     });
   }
 });
+
+app.get('/context', async (req, res) => {
+  try {
+    dbConnect(process.env.GEN_AUTH);
+
+    const context_docs = Context.find({ associated_org_id: '021b58be-2084-4f08-b860-f0e8481a7a8f' });
+
+    res.status(200).json({
+      count: context_docs.length,
+      contextDocs: context_docs
+    })
+  } catch (error) {
+    res.status(500).json({
+      message: "Error fetching context results"
+    })
+  }
+});
+
+app.post('/ask', async (req, res) => {
+  const { question } = req.body;
+
+  dbConnect(process.env.GEN_AUTH);
+
+  const context_docs = Context.find({ associated_org_id: '021b58be-2084-4f08-b860-f0e8481a7a8f' });
+  const context_arr = context_docs.map((doc) => doc.text);
+  const context_str = context_arr.join("-CONTEXT");
+
+  const openai = new OpenAI({ apiKey: process.env.OPEN_AI_API_KEY });
+  try {
+    console.log("Running assistant...");
+    const run = await openai.beta.threads.createAndRun({
+      assistant_id: process.env.OPEN_AI_ASK_ASSISTANT,
+      thread: {
+        messages: [{ role: "user", content: `${context_str} -QUESTION- ${question} -QUESTION-` }],
+      },
+    });
+    console.log("Fetching messages...");
+
+    const checkRunStatus = async () => {
+      while (true) {
+        const updatedRun = await openai.beta.threads.runs.retrieve(
+          run.thread_id,
+          run.id
+        );
+
+        if (updatedRun.status === "completed") {
+          console.log("OpenAI run completed successfully!");
+          let assistantResponse = {};
+          const messages = await openai.beta.threads.messages.list(
+            run.thread_id
+          );
+          for (const message of messages.data.reverse()) {
+            if (message.role === "assistant") {
+              assistantResponse = message.content[0].text.value
+            }
+          }
+    
+          if (assistantResponse) {
+            console.log("ASSISTANT'S RESPONSE FOUND", assistantResponse)
+            res.status(200).json({response: assistantResponse})
+          } else {
+            console.log("No assistant response found in the messages.");
+          }
+          break;
+        } else if (updatedRun.status !== "queued" || updatedRun.status !== "in_progress") {
+          console.log("Waiting for run to complete...");
+          console.log("CURRENT STATUS", updatedRun.status)
+          console.log(Date.now())
+          await new Promise((resolve) => setTimeout(resolve, 5000));
+        } else {
+          console.log(`OpenAI run failed with status: ${updatedRun.status}`);
+          res.status(500).json({response: 'assistantResponse'})
+          break;
+        } 
+      }
+    };
+
+    checkRunStatus();
+  } catch (err) {
+    console.error("Error during API interaction:", err);
+    res.status(500).json({response: 'assistantResponse'})
+  }
+})
 
 app.post("/login", async (req, res) => {
   try {

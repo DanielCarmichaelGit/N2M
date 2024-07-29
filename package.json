@@ -17,6 +17,7 @@
         "node-fetch": "^3.3.2",
         "nodemailer": "^6.9.7",
         "nodemailer-sendgrid-transport": "^0.2.0",
+        "openai": "^4.53.2",
         "stripe": "^14.21.0",
         "uuid": "^9.0.1"
     },
