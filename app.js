@@ -14,6 +14,7 @@ const SECRET_JWT = process.env.SECRET_JWT;
 
 // import models
 const User = require("./src/models/user");
+const Context = require("./src/models/context");
 
 const app = express();
 app.use(cors());
@@ -61,7 +62,7 @@ app.post("/signup", async (req, res) => {
     const new_user = new User({
       associated_org_id: uuidv4(),
       org_name,
-      password: hashedPassword
+      password: hashedPassword,
     });
     // save new user and the new group made for the user
     const created_user = await new_user.save();
@@ -85,6 +86,31 @@ app.post("/signup", async (req, res) => {
   } catch (error) {
     console.error("Error during user registration:", error);
     res.status(500).json({ message: "Internal server error", error });
+  }
+});
+
+app.post("/context", authenticateJWT, async (req, res) => {
+  const { context } = req.body;
+  const associated_org_id = req.user.associated_org_id;
+
+  try {
+    dbConnect(process.env.GEN_AUTH);
+
+    const new_context = new Context({
+      text: context,
+      associated_org_id,
+    });
+
+    new_context.save();
+
+    res.status(200).json({
+      message: "Context created",
+      context: new_context,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Issue creating context",
+    });
   }
 });
 
@@ -131,11 +157,6 @@ app.post("/login", async (req, res) => {
     res.status(500).json({ message: error });
   }
 });
-
-
-app.post('/context', authenticateJWT, async (req, res) => {
-  
-})
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
