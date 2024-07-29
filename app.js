@@ -36,6 +36,7 @@ function authenticateJWT(req, res, next) {
   jwt.verify(token, SECRET_JWT, (error, user) => {
     if (error) {
       console.log("THERE WAS AN ERROR")
+      console.log(error)
       return res.status(403).json({ message: "Token is invalid" });
     }
 
