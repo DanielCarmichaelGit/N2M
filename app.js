@@ -23,7 +23,6 @@ app.use(express.json({ limit: "50mb" }));
 const saltRounds = 10;
 
 function authenticateJWT(req, res, next) {
-  console.log("Request!", req);
   const token = req.header("Authorization");
 
   if (!token) {
@@ -32,6 +31,7 @@ function authenticateJWT(req, res, next) {
 
   jwt.verify(token, SECRET_JWT, (error, user) => {
     if (error) {
+      console.log("THERE WAS AN ERROR")
       return res.status(403).json({ message: "Token is invalid" });
     }
 
@@ -91,6 +91,16 @@ app.post("/signup", async (req, res) => {
 
 app.post("/context", authenticateJWT, async (req, res) => {
   const { context } = req.body;
+  console.log(context)
+  console.log(context)
+  console.log(context)
+  console.log(context)
+  console.log(context)
+  console.log(context)
+  console.log(context)
+  console.log(context)
+  console.log(context)
+  console.log(context)
   console.log(req.user)
   console.log(req.user)
   console.log(req.user)
