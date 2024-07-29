@@ -24,6 +24,10 @@ const saltRounds = 10;
 
 function authenticateJWT(req, res, next) {
   const token = req.header("Authorization");
+  console.log(SECRET_JWT)
+  console.log(SECRET_JWT)
+  console.log(SECRET_JWT)
+  console.log(SECRET_JWT)
 
   if (!token) {
     return res.status(401).json({ message: "Unauthorized" });
