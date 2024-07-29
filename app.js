@@ -200,6 +200,73 @@ app.post('/ask', async (req, res) => {
   }
 })
 
+app.post('/refactor', async (req, res) => {
+  const { code } = req.body;
+
+  dbConnect(process.env.GEN_AUTH);
+
+  const context_docs = await Context.find({ associated_org_id: '021b58be-2084-4f08-b860-f0e8481a7a8f' });
+  const context_arr = context_docs.map((doc) => doc.text);
+  console.log(context_arr)
+  const context_str = context_arr.join("-CONTEXT");
+
+  const openai = new OpenAI({ apiKey: process.env.OPEN_AI_API_KEY });
+  try {
+    console.log("Running assistant...");
+    const run = await openai.beta.threads.createAndRun({
+      assistant_id: process.env.OPEN_AI_CODE_ASSISTANT,
+      thread: {
+        messages: [{ role: "user", content: `${context_str} -CODE- ${code} -CODE-` }],
+      },
+    });
+    console.log("Fetching messages...");
+
+    const checkRunStatus = async () => {
+      while (true) {
+        const updatedRun = await openai.beta.threads.runs.retrieve(
+          run.thread_id,
+          run.id
+        );
+
+        if (updatedRun.status === "completed") {
+          console.log("OpenAI run completed successfully!");
+          let assistantResponse = {};
+          const messages = await openai.beta.threads.messages.list(
+            run.thread_id
+          );
+          for (const message of messages.data.reverse()) {
+            if (message.role === "assistant") {
+              assistantResponse = message.content[0].text.value
+            }
+          }
+    
+          if (assistantResponse) {
+            console.log("ASSISTANT'S RESPONSE FOUND", assistantResponse)
+            res.status(200).json({response: assistantResponse})
+          } else {
+            console.log("No assistant response found in the messages.");
+          }
+          break;
+        } else if (updatedRun.status !== "queued" || updatedRun.status !== "in_progress") {
+          console.log("Waiting for run to complete...");
+          console.log("CURRENT STATUS", updatedRun.status)
+          console.log(Date.now())
+          await new Promise((resolve) => setTimeout(resolve, 5000));
+        } else {
+          console.log(`OpenAI run failed with status: ${updatedRun.status}`);
+          res.status(500).json({response: 'assistantResponse'})
+          break;
+        } 
+      }
+    };
+
+    checkRunStatus();
+  } catch (err) {
+    console.error("Error during API interaction:", err);
+    res.status(500).json({response: 'assistantResponse'})
+  }
+})
+
 app.post("/login", async (req, res) => {
   try {
     dbConnect(process.env.GEN_AUTH);
