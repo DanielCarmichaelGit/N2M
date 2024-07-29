@@ -120,7 +120,7 @@ app.get('/context', async (req, res) => {
   try {
     dbConnect(process.env.GEN_AUTH);
 
-    const context_docs = Context.find({ associated_org_id: '021b58be-2084-4f08-b860-f0e8481a7a8f' });
+    const context_docs = await Context.find({ associated_org_id: '021b58be-2084-4f08-b860-f0e8481a7a8f' });
 
     res.status(200).json({
       count: context_docs.length,
