@@ -140,6 +140,7 @@ app.post('/ask', async (req, res) => {
 
   const context_docs = Context.find({ associated_org_id: '021b58be-2084-4f08-b860-f0e8481a7a8f' });
   const context_arr = context_docs.map((doc) => doc.text);
+  console.log(context_arr)
   const context_str = context_arr.join("-CONTEXT");
 
   const openai = new OpenAI({ apiKey: process.env.OPEN_AI_API_KEY });
