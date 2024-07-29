@@ -93,6 +93,8 @@ app.post("/context", authenticateJWT, async (req, res) => {
   const { context } = req.body;
   const associated_org_id = req.user.associated_org_id;
 
+  console.log(associated_org_id)
+
   try {
     dbConnect(process.env.GEN_AUTH);
 
