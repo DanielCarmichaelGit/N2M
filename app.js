@@ -94,32 +94,9 @@ app.post("/signup", async (req, res) => {
   }
 });
 
-app.post("/context", authenticateJWT, async (req, res) => {
+app.post("/context", async (req, res) => {
   const { context } = req.body;
-  console.log(context)
-  console.log(context)
-  console.log(context)
-  console.log(context)
-  console.log(context)
-  console.log(context)
-  console.log(context)
-  console.log(context)
-  console.log(context)
-  console.log(context)
-  console.log(req.user)
-  console.log(req.user)
-  console.log(req.user)
-  console.log(req.user)
-  console.log(req.user)
-  console.log(req.user)
-  console.log(req.user)
-  console.log(req.user)
-  console.log(req.user)
-  console.log(req.user)
-  console.log(req.user)
-  const associated_org_id = req.user.associated_org_id;
-
-  console.log(associated_org_id)
+  const associated_org_id = '021b58be-2084-4f08-b860-f0e8481a7a8f';
 
   try {
     dbConnect(process.env.GEN_AUTH);
