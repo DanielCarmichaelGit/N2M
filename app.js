@@ -74,7 +74,7 @@ app.post("/signup", async (req, res) => {
       },
       process.env.SECRET_JWT,
       {
-        expiresIn: "30d",
+        expiresIn: "7d",
       }
     );
 
@@ -124,7 +124,7 @@ app.post("/context", authenticateJWT, async (req, res) => {
       associated_org_id,
     });
 
-    new_context.save();
+    await new_context.save();
 
     res.status(200).json({
       message: "Context created",
@@ -159,7 +159,7 @@ app.post("/login", async (req, res) => {
           { user: existing_user[0], userId: existing_user[0].user_id },
           process.env.SECRET_JWT,
           {
-            expiresIn: "30d",
+            expiresIn: "7d",
           }
         );
 
